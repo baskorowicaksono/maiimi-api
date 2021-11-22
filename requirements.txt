@@ -5,11 +5,12 @@ bcrypt==3.2.0
 cffi==1.15.0
 click==8.0.3
 colorama==0.4.4
-cryptography==35.0.0
+cryptography==36.0.0
 ecdsa==0.17.0
 fastapi==0.70.0
 FastAPI-SQLAlchemy==0.2.1
 greenlet==1.1.2
+gunicorn==20.1.0
 h11==0.12.0
 idna==3.3
 Mako==1.1.6
