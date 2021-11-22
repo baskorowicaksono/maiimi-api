@@ -1,5 +1,4 @@
 import os
-import uvicorn
 import asyncio
 
 from typing import Optional
@@ -108,7 +107,7 @@ async def get_current_active_user(current_user: SchemaUser = Depends(get_current
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
-@app.post("/token", response_model=Token)
+@app.post("/login", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = await asyncio.gather(authenticate_user(form_data.username, form_data.password))
     if not user:
@@ -135,21 +134,21 @@ async def landing():
     }
 
 # API bagian Supply
-@app.get("/get-supplies")
+@app.get("/supply")
 async def get_all_supplies(current_user = Depends(get_current_active_user)):
     supplies = db.session.query(ModelSupply).all()
     if len(supplies) < 1:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Supplies were found")
     return supplies
 
-@app.get("/get-supply/{supply_id}")
+@app.get("/supply/{supply_id}")
 async def get_a_supply(supply_id:str, current_user = Depends(get_current_active_user)):
     found_supply = db.session.query(ModelSupply).filter(ModelSupply.id_produk == supply_id).first()
     if found_supply is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supply not found")
     return found_supply
 
-@app.post("/add-supply", response_model = SchemaSupply, status_code = status.HTTP_201_CREATED)
+@app.post("/supply", response_model = SchemaSupply, status_code = status.HTTP_201_CREATED)
 async def add_supply(supply: SchemaSupply, current_user = Depends(get_current_active_user)):
     db_supply = ModelSupply(
         id_produk=supply.id_produk,
@@ -165,7 +164,7 @@ async def add_supply(supply: SchemaSupply, current_user = Depends(get_current_ac
 
     return db_supply
 
-@app.put("/update-supply/{supply_id}", response_model = SchemaSupplyUpdate, status_code = status.HTTP_200_OK)
+@app.put("/supply/{supply_id}", response_model = SchemaSupplyUpdate, status_code = status.HTTP_200_OK)
 async def update_supply(supply_id: str, supply: SchemaSupplyUpdate, current_user = Depends(get_current_active_user)):
     supply_to_update = db.session.query(ModelSupply).filter(ModelSupply.id_produk == supply_id).first()
     if supply_to_update is None:
@@ -181,7 +180,7 @@ async def update_supply(supply_id: str, supply: SchemaSupplyUpdate, current_user
 
     return supply_to_update
 
-@app.delete("/delete-supply/{supply_id}")
+@app.delete("/supply/{supply_id}")
 async def delete_a_supply(supply_id: str, current_user = Depends(get_current_active_user)):
     supply_to_delete = db.session.query(ModelSupply).filter(ModelSupply.id_produk == supply_id).first()
     if supply_to_delete is None:
@@ -194,7 +193,7 @@ async def delete_a_supply(supply_id: str, current_user = Depends(get_current_act
         "message" : f"Supply {supply_id} successfully deleted"
     }
 
-@app.delete("/delete-supplies")
+@app.delete("/supply")
 async def delete_supplies(current_user = Depends(get_current_active_user)):
     supplies = db.session.query(ModelSupply).all()
 
@@ -210,21 +209,21 @@ async def delete_supplies(current_user = Depends(get_current_active_user)):
     }
 
 # API bagian Produksi
-@app.get("/get-productions")
+@app.get("/production")
 async def get_all_productions(current_user = Depends(get_current_active_user)):
     productions = db.session.query(ModelProduksi).all()
     if len(productions) < 1:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Productions were found")
     return productions
 
-@app.get("/get-production/{production_id}")
+@app.get("/production/{production_id}")
 async def get_a_production(production_id:str, current_user = Depends(get_current_active_user)):
     found_production = db.session.query(ModelProduksi).filter(ModelProduksi.id_produksi == production_id).first()
     if found_production is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Production not found")
     return found_production
 
-@app.post("/add-production", response_model=SchemaProduksi, status_code=status.HTTP_201_CREATED)
+@app.post("/production", response_model=SchemaProduksi, status_code=status.HTTP_201_CREATED)
 async def add_production(produksi: SchemaProduksi, current_user = Depends(get_current_active_user)):
     try:
         db_produksi = ModelProduksi(
@@ -240,7 +239,7 @@ async def add_production(produksi: SchemaProduksi, current_user = Depends(get_cu
     except:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product ID Not found")
 
-@app.delete("/delete-productions")
+@app.delete("/production")
 async def delete_all_productions(current_user = Depends(get_current_active_user)):
     productions = db.session.query(ModelProduksi).all()
     if len(productions) == 0:
@@ -254,7 +253,7 @@ async def delete_all_productions(current_user = Depends(get_current_active_user)
         "message" : "All production successfully deleted"
     }
 
-@app.delete("/delete-production/{production_id}")
+@app.delete("/production/{production_id}")
 async def delete_production(production_id: str, current_user = Depends(get_current_active_user)):
     production_to_delete = db.session.query(ModelProduksi).filter(ModelProduksi.id_produksi == production_id).first()
 
@@ -269,21 +268,21 @@ async def delete_production(production_id: str, current_user = Depends(get_curre
     }
 
 # API bagian Penjualan
-@app.get("/get-sellings")
+@app.get("/penjualan")
 async def get_all_sellings(current_user = Depends(get_current_active_user)):
     sellings = db.session.query(ModelPenjualan).all()
     if len(sellings) < 1:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Sellings were found")
     return sellings
 
-@app.get("/get-selling/{selling_id}")
+@app.get("/penjualan/{selling_id}")
 async def get_a_selling(selling_id:str, current_user = Depends(get_current_active_user)):
     found_selling = db.session.query(ModelPenjualan).filter(ModelPenjualan.id_transaksi == selling_id).first()
     if found_selling is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Selling not found")
     return found_selling
 
-@app.post("/add-selling", response_model = SchemaPenjualan, status_code = status.HTTP_201_CREATED)
+@app.post("/penjualan", response_model = SchemaPenjualan, status_code = status.HTTP_201_CREATED)
 async def add_penjualan(penjualan: SchemaPenjualan, current_user = Depends(get_current_active_user)):
     db_penjualan = ModelPenjualan(
         id_transaksi=penjualan.id_transaksi,
@@ -297,7 +296,7 @@ async def add_penjualan(penjualan: SchemaPenjualan, current_user = Depends(get_c
 
     return db_penjualan
 
-@app.put("/update-selling/{selling_id}", response_model = SchemaPenjualanUpdate, status_code = status.HTTP_200_OK)
+@app.put("/penjualan/{selling_id}", response_model = SchemaPenjualanUpdate, status_code = status.HTTP_200_OK)
 async def update_penjualan(selling_id: str, penjualan: SchemaPenjualanUpdate, current_user = Depends(get_current_active_user)):
     penjualan_to_update = db.session.query(ModelPenjualan).filter(ModelPenjualan.id_transaksi == selling_id).first()
 
@@ -312,7 +311,7 @@ async def update_penjualan(selling_id: str, penjualan: SchemaPenjualanUpdate, cu
 
     return penjualan_to_update
 
-@app.delete("/delete-selling/{selling_id}")
+@app.delete("/penjualan/{selling_id}")
 async def delete_a_penjualan(selling_id: str, current_user = Depends(get_current_active_user)):
     penjualan_to_delete = db.session.query(ModelPenjualan).filter(ModelPenjualan.id_transaksi == selling_id).first()
 
@@ -326,7 +325,7 @@ async def delete_a_penjualan(selling_id: str, current_user = Depends(get_current
         "message" : f"Penjualan {selling_id} successfully deleted"
     }
 
-@app.delete("/delete-sellings")
+@app.delete("/penjualan")
 async def delete_penjualan(current_user = Depends(get_current_active_user)):
     penjualan = db.session.query(ModelPenjualan).all()
 
@@ -343,21 +342,21 @@ async def delete_penjualan(current_user = Depends(get_current_active_user)):
 
 
 # API bagian pembeli
-@app.get("/get-buyers")
+@app.get("/pembeli")
 async def get_all_buyers(current_user = Depends(get_current_active_user)):
     buyers = db.session.query(ModelPembeli).all()
     if len(buyers) < 1:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="No Buyers were found")
     return buyers
 
-@app.get("/get-buyer/{buyer_id}")
+@app.get("/pembeli/{buyer_id}")
 async def get_a_buyer(buyer_id:str, current_user = Depends(get_current_active_user)):
     found_buyer = db.session.query(ModelPembeli).filter(ModelPembeli.id_pembeli == buyer_id).first()
     if found_buyer is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Buyer not found")
     return found_buyer
 
-@app.post("/add-buyer", response_model = SchemaPembeli, status_code = status.HTTP_201_CREATED)
+@app.post("/pembeli", response_model = SchemaPembeli, status_code = status.HTTP_201_CREATED)
 async def add_buyer(pembeli: SchemaPembeli, current_user = Depends(get_current_active_user)):
     db_pembeli = ModelPembeli(
         id_pembeli=pembeli.id_pembeli,
@@ -374,7 +373,7 @@ async def add_buyer(pembeli: SchemaPembeli, current_user = Depends(get_current_a
 
     return db_pembeli
 
-@app.put("/update-buyer/{buyer_id}", response_model = SchemaPembeliUpdate, status_code = status.HTTP_200_OK)
+@app.put("/pembeli/{buyer_id}", response_model = SchemaPembeliUpdate, status_code = status.HTTP_200_OK)
 async def update_buyer(buyer_id: str, pembeli: SchemaPembeliUpdate, current_user = Depends(get_current_active_user)):
     pembeli_to_update = db.session.query(ModelPembeli).filter(ModelPembeli.id_pembeli == buyer_id).first()
 
@@ -392,7 +391,7 @@ async def update_buyer(buyer_id: str, pembeli: SchemaPembeliUpdate, current_user
 
     return pembeli_to_update
 
-@app.delete("/delete-buyer/{buyer_id}")
+@app.delete("/pembeli/{buyer_id}")
 async def delete_a_buyer(buyer_id: str, current_user = Depends(get_current_active_user)):
     pembeli_to_delete = db.session.query(ModelPembeli).filter(ModelPembeli.id_pembeli == buyer_id).first()
 
@@ -406,7 +405,7 @@ async def delete_a_buyer(buyer_id: str, current_user = Depends(get_current_activ
         "message" : f"Buyer {buyer_id} successfully deleted"
     }
 
-@app.delete("/delete-buyers")
+@app.delete("/pembeli")
 async def delete_all_buyer(current_user = Depends(get_current_active_user)):
     pembeli = db.session.query(ModelPembeli).all()
 
@@ -423,21 +422,21 @@ async def delete_all_buyer(current_user = Depends(get_current_active_user)):
 
 
 # API bagian user
-@app.get("/get-users")
+@app.get("/user")
 async def get_users(current_user = Depends(get_current_active_user)):
     users = db.session.query(ModelUser).all()
     if len(users) < 1:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="No Users were found")
     return users
 
-@app.get("/get-user/{username}")
+@app.get("/user/{username}")
 async def get_user(username:str, current_user = Depends(get_current_active_user)):
     found_user = db.session.query(ModelUser).filter(ModelUser.id_username == username).first()
     if found_user is None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
     return found_user
 
-@app.post("/add-user", response_model=SchemaUser, status_code = status.HTTP_201_CREATED)
+@app.post("/user", response_model=SchemaUser, status_code = status.HTTP_201_CREATED)
 async def add_user(user: SchemaUser, current_user = Depends(get_current_active_user)):
     db_user = ModelUser(
         id_username=user.id_username,
@@ -451,6 +450,3 @@ async def add_user(user: SchemaUser, current_user = Depends(get_current_active_u
     db.session.commit()
 
     return db_user
-
-if __name__ == "__main__":
-    uvicorn.run(app, host= "0.0.0.0", port=8000, reload=True)
